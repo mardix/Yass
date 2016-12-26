@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}{%endblock%}</title>
+        <meta name="description" content="{{ page.description or '' }}">
+
+        <m:css src='vendor/font-awesome/css/font-awesome.min.css' />
+        <m:css src='vendor/bootstrap/css/bootstrap.min.css' />
+        <m:css src='css/style.css' />
+        <m:js src='vendor/jquery/jquery.min.js' />
+    </head>
+    <body>
+
+        <div class="container">
+
+            {% block body %}{% endblock %}
+
+        </div>
+
+        <m:js src='vendor/bootstrap/js/bootstrap.min.js' />
+        <m:js src='vendor/jquery-timeago/jquery.timeago.js' />
+        <m:js src='js/app.js' />
+
+    </body>
+
+</html>

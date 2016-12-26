@@ -1,0 +1,65 @@
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+#                              YASS
+#                      Yet Another Static Site
+# mardix.github.io/yass
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Config
+
+# Site name
+site_name:
+
+# Site url, the canonical url to build
+base_url:
+
+# Default layout
+default_layout: "layouts/default.html"
+
+# Static url path
+static_url: /static
+
+# Google Analytics code
+google_analytics:
+
+# Debug
+debug: True
+
+
+# ------------------------------------------------------------------------------
+# Site: Global site context
+# Variables under [site] will be available in the page as ie: {{ site.name }}
+site:
+  # Site name
+  name:
+
+  # Site url
+  url:
+
+  # Social
+  social:
+
+    facebook:
+
+    twitter:
+
+    github:
+
+
+# ------------------------------------------------------------------------------
+# S3 deployment configuration
+s3_deploy:
+  aws-access-key:
+  aws-bucket-name:
+  aws-bucket-website:
+
+
+# ------------------------------------------------------------------------------
+# For local server development
+local_server:
+  port: 8000
+  livereload: True
+  openwindow: True
+
