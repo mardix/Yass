@@ -15,198 +15,128 @@ We also recommend the HTML like tag
 
 {#: The basic meta tag :#}
 {% macro meta_tag(name, value) %}
-    <meta name="{{ name }}" content="{{ value | safe }}">
+    <meta name="{{ name }}" content="{{ value or '' | safe }}">
 {% endmacro %}
 
 {#: Custom meta tag :#}
 {% macro meta_custom(namespace, name, value) %}
-    <meta {{ namespace }}="{{ name }}" content="{{ value | safe }}">
+    <meta {{ namespace }}="{{ name }}" content="{{ value or '' | safe }}">
 {% endmacro %}
 
 {#: opengraph property :#}
 {% macro meta_property(namespace, name, value) %}
-    <meta property="{{ namespace }}:{{ name }}" content="{{ value | safe }}">
+    <meta property="{{ namespace }}:{{ name }}" content="{{ value or '' | safe }}">
 {% endmacro %}
 
 {#: opengraph tag :#}
 {% macro meta_opengraph(name, value) %}
     {% if value %}
-        <meta property="og:{{ name }}" content="{{ value | safe }}">
+        <meta property="og:{{ name }}" content="{{ value or '' | safe }}">
     {% endif %}
 {% endmacro %}
 
 {#: Custom meta tag :#}
 {% macro meta_googleplus(name, value) %}
     {% if value %}
-        <meta itemprop="{{ name }}" content="{{ value | safe }}">
+        <meta itemprop="{{ name }}" content="{{ value or '' | safe }}">
     {% endif %}
 {% endmacro %}
 
 {#: Custom meta tag :#}
 {% macro meta_twitter(name, value) %}
     {% if value %}
-        <meta name="twitter:{{ name }}" content="{{ value | safe }}">
+        <meta name="twitter:{{ name }}" content="{{ value or '' | safe }}">
     {% endif %}
 {% endmacro %}
+
+
 
 {# -------------------------------------------------------------------------- #}
-{#: SOCIAL_GRAPH() ---------------------------------------------------------- #}
-{% macro opengraph(use_opengraph=True, use_googleplus=True, use_twitter=True) %}
 
-    {% set url = __.__META__["url"] or request.base_url %}
-    {% set image =  __.__META__["image"] %}
+{#: Page meta_social_graph :#}
+{% macro meta_social_graph() %}
+    {% set url =  site.base_url + page.url %}
+    {{ meta_opengraph("title", page.title or '') }}
+    {{ meta_opengraph("description", page.description or '') }}
+    {{ meta_opengraph("url", url) }}
+    {{ meta_opengraph("site_name", site.name or '') }}
+    {{ meta_opengraph("type", page.meta.object_type or 'article') }}
+    {{ meta_googleplus("description", page.description or '' ) }}
+    {{ meta_googleplus("name", page.title or '') }}
+    {{ meta_googleplus("url", url) }}
+    {{ meta_twitter("title", page.title or '') }}
+    {{ meta_twitter("description", page.description or '') }}
+    {{ meta_twitter("url", url ) }}
 
-    {% if __.__META__["use_opengraph"] and use_opengraph %}
-        {{ meta_opengraph("title", __.__META__["title"]) }}
-        {{ meta_opengraph("description", __.__META__["description"]) }}
-        {{ meta_opengraph("url", url) }}
-        {{ meta_opengraph("site_name", __.__META__["site_name"]) }}
-        {%  set object_type = __.__META__["object_type"] %}
-            {{- meta_opengraph("type", __.__META__["object_type"]) -}}
-        {% if image %}
-            {{ meta_opengraph("image", image) }}
-        {% endif %}
+    {% if not page.image %}
+        {{ meta_twitter("card", "summary") }}
     {% endif %}
 
-    {% if __.__META__["use_googleplus"] and use_googleplus %}
-        {{ meta_googleplus("description", __.__META__["description"]) }}
-        {{ meta_googleplus("name", __.__META__["title"]) }}
-        {{ meta_googleplus("url", url) }}
-        {% if image %}
-            {{ meta_googleplus("image", image) }}
-        {% endif %}
+    {% if page.image %}
+        {{ meta_opengraph("image", page.image) }}
+        {{ meta_googleplus("image", page.image) }}
+        {{ meta_twitter("image", page.image) }}
+        {{ meta_twitter("card", "summary_large_image") }}
     {% endif %}
+{% endmacro %}
 
-    {% if __.__META__["use_twitter"] and use_twitter %}
-        {{ meta_twitter("title", __.__META__["title"]) }}
-        {{ meta_twitter("description", __.__META__["description"]) }}
-        {{ meta_twitter("url", url ) }}
-        {% if image %}
-            {{ meta_twitter("image", image) }}
-            {{ meta_twitter("card", "summary_large_image") }}
-        {% else %}
-            {{ meta_twitter("card", "summary") }}
-        {% endif %}
-    {% endif %}
-
-    {%  for k, v in __.__META__.properties.items() %}
-        {{ meta_custom("property", k, v) }}
+{#: Meta tags :#}
+{% macro meta_tags() %}
+    {% for k, v in page.meta.items() %}
+        {{ meta_tag(k, v) }}
     {% endfor %}
-
 {% endmacro %}
 
-
-{# Create the title, charset tag #}
-{% macro header(title="%title%", charset="utf-8") %}
-    <meta charset="{{ charset }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title | replace("%title%", __.__META__.title) | safe }}</title>
-    {{ meta_tag("description", __.__META__.description) }}
+{#: Page title :#}
+{% macro page_title(title=None, suffix=None, separator='|') %}
+    <title>{{ title or page.title or '' }} {{ separator }} {{ suffix or site.name }}</title>
+    {{ meta_tag('title', title or page.title or '') }}
+    <link rel="canonical" href="{{ site.base_url }}"/>
 {% endmacro %}
 
-
-{#: Favicon :#}
-{% macro favicon(path) %}
-    <link rel="shortcut icon" href="{{- static_file(path) -}}">
-{% endmacro %}
-
-
-{% macro global_assets() %}
-    {{ css_asset('global.css') }}
-    {{ js_asset('jquery.js') }}
-    {{ js_asset('global.js') }}
-{% endmacro %}
-
-{% macro bootstrap() %}
-    {{ css_asset('bootstrap.css') }}
-    {{ js_asset('bootstrap.js') }}
-{% endmacro %}
-
-
-{% macro fontawesome() %}
-    {{ css_asset("vendor/font-awesome/font-awesome.min.css") }}
-{% endmacro %}
-
-{% macro fontawesome_cdn(version="4.3.0") %}
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/{{ version }}/css/font-awesome.min.css">
-{% endmacro %}
-
-
-{% macro bootswatch_theme(name) %}
-    {% set file = 'Mambo/bootswatch/%s.css' % name %}
-    {% set output = "gen/bootswatch_%s.css" % name %}
-    {% assets output=output, file %}
-        <link rel="stylesheet" href="{{ ASSET_URL }}" type="text/css" >
-    {% endassets %}
-{% endmacro %}
-
-{#: HEADER() ----------------------------------------------------------- #}
-{% macro head(title="%s",
-        favicon_="favicon.ico",
-        charset="utf-8",
-        add_social_graph=true,
-        add_google_analytics=true,
-        fontawesome_version="4.4.0") %}
-
-    {{ page_header() }}
-    {{ favicon(favicon_) }}
-    {{ global_assets() }}
-
-    {% if add_social_graph == true %}
-        {{ meta.social_graph() }}
-    {% endif %}
-
-
-
-    {% if add_google_analytics == true %}
-        {{ google_analytics() }}
-    {% endif %}
-
-    {{ fontawesome(fontawesome_version) }}
-
+{#: Page description :#}
+{% macro page_description(description=None) %}
+    {{ meta_tag('description', description or page.description or site.description or '') }}
 {% endmacro %}
 
 
 {# -------------------------------------------------------------------------- #}
 {# ASSETS #}
 
+{#: CSS :#}
 {% macro css(src) %}
     {% assets src %}
     <link rel="stylesheet" href="{{ ASSET_URL }}" type="text/css" >
     {% endassets %}
 {% endmacro %}
 
-
+{#: JS :#}
 {% macro js(src) %}
     {% assets src %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 {% endmacro %}
 
-
+{#: IMG :#}
 {% macro img(src, class="", id="") %}
     {% assets src %}
-        <img src="{{ ASSET_URL }}" class="{{ class }}" id="{{ id }}"/>
+    <img src="{{ ASSET_URL }}" class="{{ class }}" id="{{ id }}"/>
     {% endassets %}
 {% endmacro %}
 
-{# -------------------------------------------------------------------------- #}
 
-{#:: static_file(url) ::#}
-{#:: Include static assets ::#}
-{% macro static_file(url) %}
-    {% if not url.startswith('http') and not url.startswith('//')  %}
-        {% set url = url_for('static', filename=url) %}
-    {% endif %}
-    {{ url | safe }}
+{#: Favicon :#}
+{% macro favicon(path) %}
+    {% assets src %}
+    <link rel="shortcut icon" href="{{ ASSET_URL }}">
+    {% endassets %}
 {% endmacro %}
 
 
-
-{#: GOOGLE_ANALYTICS() ------------------------------------------------------ #}
+{#: Favicon :#}
 {% macro google_analytics(code=None) %}
     {% if not code %}
-        {% set code = __.APPLICATION_GOOGLE_ANALYTICS_ID %}
+        {% set code = site.google_analytics %}
     {% endif %}
     {% if code %}
         <script>

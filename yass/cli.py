@@ -81,8 +81,11 @@ def serve(port, no_livereload, open_url):
 
     def build_static():
         engine.build_static()
+
     def build_pages():
         engine.build_pages()
+
+    engine.build()
 
     server = Server()
     if no_livereload is False:
@@ -93,7 +96,7 @@ def serve(port, no_livereload, open_url):
 
     server.serve(open_url_delay=open_url, port=port, root=engine.build_dir)
 
-#@cli.command("clean-build")
+@cli.command("clean")
 def clean():
     """Clean the build dir """
     print("Cleaning build dir...")

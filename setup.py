@@ -8,6 +8,8 @@ Yet Another Static Site!
 import os
 from setuptools import setup, find_packages
 
+__version__ = "0.0.3"
+
 install_requires = [
     "jinja2==2.8",
     "webassets==0.12.0",
@@ -19,11 +21,12 @@ install_requires = [
     "jinja-macro-tags==0.1",
     "livereload==2.5.0",
     "arrow==0.8.0",
+    "python-slugify==1.2.1",
 ]
 
 setup(
     name="Yass",
-    version="0.0.1",
+    version=__version__,
     license="MIT",
     author="Mardix",
     author_email="mardix@pylot.io",

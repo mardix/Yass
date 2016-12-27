@@ -1,6 +1,5 @@
 // app.js
 $(function(){
-    
-    // init time ago
+        // init time ago
     $("time.timeago").timeago();
 })

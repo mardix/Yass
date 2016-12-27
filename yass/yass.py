@@ -21,6 +21,7 @@ from webassets.script import CommandLineEnvironment as WACommandLineEnvironment
 from webassets import Environment as WAEnv
 import webassets.loaders
 import pyjade
+from slugify import slugify
 
 # ------------------------------------------------------------------------------
 
@@ -116,11 +117,14 @@ class Yass(object):
     }
 
     default_page_meta = {
-        "title": "",  # The title of the page
-        "markup": None,  # To switch
-        "url": None,  # the url
-        "description": None,
-        "date": None
+        "title": "",            # The title of the page
+        "markup": None,         # The markup to use. ie: md | jade
+        "slug": None,           # The pretty url new name of the file. A file with the same name will be created
+        "url": None,            # It will
+        "description": "",      # Page description
+        "pretty_url": True,     # By default, all url will be pretty (search engine friendly) Set to False to keep the .html
+        "date": None,
+        "meta": {}
     }
 
     def __init__(self, root_dir):
@@ -139,6 +143,9 @@ class Yass(object):
 
         # Site context
         self.context["site"] = self.config.get("site", {})
+        if "base_url" not in self.context["site"] or not self.context["site"]["base_url"]:
+            self.context["site"]["base_url"] = "/"
+        self.base_url = self.context["site"]["base_url"]
 
         self.setup()
 
@@ -161,8 +168,10 @@ class Yass(object):
         ])
 
         self.tpl_env = jinja2.Environment(loader=loader,
-                                          extensions=['pyjade.ext.jinja.PyJadeExtension',
-                                                      AssetsExtension])
+                                          extensions=[
+                                              'yass.htmlcompress.HTMLCompress',
+                                              'pyjade.ext.jinja.PyJadeExtension',
+                                               AssetsExtension])
 
         configure_environment(self.tpl_env)
         self.tpl_env.filters.update({
@@ -249,28 +258,39 @@ class Yass(object):
     def _build_page(self, src_file, dest_dir):
 
         filename = src_file.split("/")[-1]
-
+        # If filename starts with _ (underscore) do not build
         if not filename.startswith("_") and (filename.endswith(PAGE_FORMAT)):
             dest_dir = dest_dir.rstrip("/")
             metadata = self.default_page_meta.copy()
-
+            metadata["meta"].update(self.config.get("site.meta", {}))
             with open(src_file) as f:
                 _meta, content = frontmatter.parse(f.read())
-            metadata.update(_meta)
+                metadata.update(_meta)
 
-            if filename in ["index.html", "index.md", "index.jade"]:
-                dest_file = dest_dir + "/index.html"
+            fname = filename\
+                .replace(".html", "")\
+                .replace(".md", "")\
+                .replace(".jade", "")
+
+            pretty_url = metadata.get("pretty_url", True)
+            slug = metadata.get("slug")
+            if slug:
+                fname = slugify(slug)
+
+            if not pretty_url:
+                dest_file = os.path.join(dest_dir, "%s.html" % fname)
+
             else:
-                fname = filename.replace(".html", "").replace(".md", "").replace(".jade", "")
-                dest_dir += "/" + fname
-                dest_file = dest_dir + "/index.html"
+                if filename not in ["index.html", "index.md", "index.jade"]:
+                    dest_dir = os.path.join(dest_dir, fname)
+                dest_file = os.path.join(dest_dir, "index.html")
+
             if not os.path.isdir(dest_dir):
                 os.makedirs(dest_dir)
 
-            if "url" in metadata:
-                url = metadata["url"]
-            else:
-                url = dest_dir.replace(self.build_dir, "")
+            # The final url
+            metadata["url"] = dest_file.replace(self.build_dir, "")\
+                .replace("index.html", "")
 
             # page context
             context = self.context.copy()

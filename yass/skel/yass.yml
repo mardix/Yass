@@ -12,17 +12,20 @@
 # Site name
 site_name:
 
-# Site url, the canonical url to build
-base_url:
-
 # Default layout
 default_layout: "layouts/default.html"
 
 # Static url path
 static_url: /static
 
-# Google Analytics code
-google_analytics:
+# Bool: Create sitemap.xml
+make_sitemap: True
+
+# Bool: Create feed.xml
+make_rss: True
+
+# Bool: Create robots.txt
+make_robots: True
 
 # Debug
 debug: True
@@ -32,21 +35,31 @@ debug: True
 # Site: Global site context
 # Variables under [site] will be available in the page as ie: {{ site.name }}
 site:
+
   # Site name
   name:
 
-  # Site url
-  url:
+  # Site base url, the canonical url to build
+  base_url: /
+
+  # Google Analytics code
+  google_analytics:
+
+  # Site Favicon
+  favicon:
+
+  # Global meta tags. They can be overwritten by page meta tags
+  meta:
+    keywords:
+    language: en-us
+    rating: General
+    robots: index, follow
 
   # Social
   social:
-
     facebook:
-
     twitter:
-
     github:
-
 
 # ------------------------------------------------------------------------------
 # S3 deployment configuration
