@@ -8,7 +8,7 @@ Yet Another Static Site!
 import os
 from setuptools import setup, find_packages
 
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 
 install_requires = [
     "jinja2==2.8",
@@ -22,6 +22,7 @@ install_requires = [
     "livereload==2.5.0",
     "arrow==0.8.0",
     "python-slugify==1.2.1",
+    "boto3==1.4.3",
 ]
 
 setup(

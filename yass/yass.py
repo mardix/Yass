@@ -23,6 +23,7 @@ import webassets.loaders
 import pyjade
 from slugify import slugify
 
+
 # ------------------------------------------------------------------------------
 
 NAME = "Yass"
@@ -110,26 +111,26 @@ class Yass(object):
     RE_BLOCK_BODY_PARSED = re.compile(r'{%\s*block\s+body\s*%}(.*?){%\s*endblock\s*%}')
     RE_EXTENDS = re.compile(r'{%\s*extends\s+(.*?)\s*%}')
 
+    # Global context
     context = {
-        "site": {},
-        "page": {},
-        "data": {}
+        "site": {},     # context set in the yass.yml
+        "page": {},     # context set at the page level
+        "data": {}      # context set in the data directory
     }
 
     default_page_meta = {
         "title": "",            # The title of the page
-        "markup": None,         # The markup to use. ie: md | jade
+        "markup": None,         # The markup to use. ie: md | jade | html (default)
         "slug": None,           # The pretty url new name of the file. A file with the same name will be created
-        "url": None,            # It will
+        "url": None,            # This will be added when processed
         "description": "",      # Page description
         "pretty_url": True,     # By default, all url will be pretty (search engine friendly) Set to False to keep the .html
-        "date": None,
         "meta": {}
     }
 
     def __init__(self, root_dir):
         self.root_dir = root_dir
-        self.build_dir = os.path.join(self.root_dir, ".build")
+        self.build_dir = os.path.join(self.root_dir, "build")
         self.static_dir = os.path.join(self.root_dir, "static")
         self.content_dir = os.path.join(self.root_dir, "content")
         self.pages_dir = os.path.join(self.root_dir, "pages")
@@ -147,7 +148,13 @@ class Yass(object):
             self.context["site"]["base_url"] = "/"
         self.base_url = self.context["site"]["base_url"]
 
-        self.setup()
+        self.sitename = self.config.get("sitename")
+        if self.sitename:
+            self.sitename = self.sitename.lstrip("http://")\
+                .lstrip("https://")\
+                .lstrip("www.")
+
+
 
     def setup(self):
         if not os.path.isdir(self.build_dir):
@@ -327,4 +334,5 @@ class Yass(object):
         self.load_data()
         self.build_static()
         self.build_pages()
+
 

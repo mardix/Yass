@@ -9,8 +9,8 @@
 # ------------------------------------------------------------------------------
 # Config
 
-# Site name
-site_name:
+# **REQUIRED - Site name. Site name without http:// or www. ie: mysite.com
+sitename:
 
 # Default layout
 default_layout: "layouts/default.html"
@@ -39,8 +39,11 @@ site:
   # Site name
   name:
 
-  # Site base url, the canonical url to build
+  # **REQUIRED - Site base url, the canonical url to build
   base_url: /
+
+  # The site url
+  url:
 
   # Google Analytics code
   google_analytics:
@@ -62,11 +65,16 @@ site:
     github:
 
 # ------------------------------------------------------------------------------
-# S3 deployment configuration
-s3_deploy:
-  aws-access-key:
-  aws-bucket-name:
-  aws-bucket-website:
+# Publish endpoints. List the endpoints to use. By default it will use 's3'
+# ie: `yass publish` will deploy to S3.
+# If other endpoint is available, `yass publish github`
+publish_endpoints:
+  # AWS S3. It will use the `site_name` as the bucket name
+  s3:
+    aws_region: us-east-1
+    aws_access_key_id:
+    aws_secret_access_key:
+
 
 
 # ------------------------------------------------------------------------------
