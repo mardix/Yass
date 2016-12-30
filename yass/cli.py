@@ -4,6 +4,7 @@ import pkg_resources
 import click
 from livereload import Server, shell
 from . import Yass, publisher
+from .__about__ import *
 
 CWD = os.getcwd()
 
@@ -37,6 +38,11 @@ def cli():
     """
     pass
 
+@cli.command("version")
+def version():
+    """Return the vesion of Yass"""
+    print(__version__)
+    footer()
 
 @cli.command("build")
 def build():
@@ -61,7 +67,7 @@ def publish(endpoint):
     if not sitename:
         raise ValueError("Missing site name")
 
-    endpoint = yass.config.get("publish_endpoints.%s" % target)
+    endpoint = yass.config.get("hosting.%s" % target)
     if not endpoint:
         raise ValueError("%s endpoint is missing in the config" % target.upper())
 
@@ -100,10 +106,10 @@ def setup_domain(endpoint):
     if not sitename:
         raise ValueError("Missing site name")
 
-    endpoint = yass.config.get("publish_endpoints.%s" % target)
+    endpoint = yass.config.get("hosting.%s" % target)
     if not endpoint:
         raise ValueError(
-            "%s endpoint is missing in the config" % target.upper())
+            "%s endpoint is missing in the hosting config" % target.upper())
 
     if target == "s3":
         p = publisher.S3Website(sitename=sitename,
@@ -135,8 +141,6 @@ def create(sitename):
         print("CD into '%s' and run 'yass serve' to view the site" % sitename)
 
     footer()
-
-
 
 
 @cli.command()

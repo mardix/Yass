@@ -65,10 +65,10 @@ site:
     github:
 
 # ------------------------------------------------------------------------------
-# Publish endpoints. List the endpoints to use. By default it will use 's3'
+# Hosting. List the endpoints to use. By default it will use 's3'
 # ie: `yass publish` will deploy to S3.
 # If other endpoint is available, `yass publish github`
-publish_endpoints:
+hosting:
   # AWS S3. It will use the `site_name` as the bucket name
   s3:
     aws_region: us-east-1

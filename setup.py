@@ -10,6 +10,13 @@ from setuptools import setup, find_packages
 
 __version__ = "0.0.5"
 
+base_dir = os.path.dirname(__file__)
+
+__about__ = {}
+
+with open(os.path.join(base_dir, "yass", "__about__.py")) as f:
+    exec(f.read(), __about__)
+
 install_requires = [
     "jinja2==2.8",
     "webassets==0.12.0",
@@ -26,13 +33,13 @@ install_requires = [
 ]
 
 setup(
-    name="Yass",
-    version=__version__,
-    license="MIT",
-    author="Mardix",
-    author_email="mardix@pylot.io",
-    description="Yet Another Static Site generator for everybody",
-    url="https://github.com/mardix/yass",
+    name=__about__["__title__"],
+    version=__about__["__version__"],
+    license=__about__["__license__"],
+    author=__about__["__author__"],
+    author_email=__about__["__email__"],
+    description=__about__["__summary__"],
+    url=__about__["__uri__"],
     long_description="Static site generator",
     py_modules=['yass'],
     entry_points=dict(console_scripts=[
