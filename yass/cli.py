@@ -87,6 +87,39 @@ def publish(endpoint):
     footer()
 
 
+@cli.command("setup-domain")
+@click.argument("endpoint", default="s3")
+def setup_domain(endpoint):
+    """Setup site domain to route to static site"""
+    print("Setting up domain...")
+
+    yass = Yass(CWD)
+    target = endpoint.lower()
+
+    sitename = yass.sitename
+    if not sitename:
+        raise ValueError("Missing site name")
+
+    endpoint = yass.config.get("publish_endpoints.%s" % target)
+    if not endpoint:
+        raise ValueError(
+            "%s endpoint is missing in the config" % target.upper())
+
+    if target == "s3":
+        p = publisher.S3Website(sitename=sitename,
+                                aws_access_key_id=endpoint.get("aws_access_key_id"),
+                                aws_secret_access_key=endpoint.get("aws_secret_access_key"),
+                                region=endpoint.get("aws_region"))
+
+        print("Setting AWS Route53 for: %s ..." % p.sitename)
+        p.setup_domain()
+        print("")
+        print("Yass! Route53 setup successfully!")
+        print("You can now visit the site at :")
+        print(p.sitename_endpoint)
+    footer()
+
+
 @cli.command("create")
 @click.argument("sitename")
 def create(sitename):

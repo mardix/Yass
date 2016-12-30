@@ -8,7 +8,7 @@ Yet Another Static Site!
 import os
 from setuptools import setup, find_packages
 
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 
 install_requires = [
     "jinja2==2.8",
