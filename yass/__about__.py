@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 __title__ = "Yass"
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __summary__ = "Yet Another Static Site (generator) for the common folks! "
 __uri__ = "https://github.com/mardix/yass"
 __author__ = "Mardix"
