@@ -4,16 +4,18 @@
 #                              YASS
 #                      Yet Another Static Site
 # mardix.github.io/yass
+#
+# yass v=##VERSION##
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 # Config
 
-# **REQUIRED - Site name. Site name without http:// or www. ie: mysite.com
+# ** REQUIRED ** - Site name. Site name without http:// or www. ie: mysite.com
 sitename:
 
 # Default layout
-default_layout: "layouts/default.html"
+default_layout: "layouts/default.jade"
 
 # Static url path
 static_url: /static

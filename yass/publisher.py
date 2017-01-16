@@ -85,7 +85,7 @@ class S3Website(object):
         exists, error_code, error_message = self.head_bucket(self.sitename)
         self.website_exists = exists
 
-    def setup_domain(self):
+    def setup_dns(self):
         route53 = boto3.client('route53', **self.aws_params)
 
         hosted_zone_id = self._get_route53_hosted_zone_by_domain(self.sitename)

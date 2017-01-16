@@ -4,11 +4,32 @@
 YASS is Yet Another Static Site (generator). 
 
 
-A static site generator that makes you say Yass! once done.
 
-Yass is meant to be developer and non developer friendly. 
+### About 
 
-Yass allows you to write your content in either HTML, Markdown or Jade. 
+A static site generator that makes you say Yass!
+
+Yass is created out of frustration of not finding a simple enough, flexible
+static site generator, that supports HTML, but also Markdown and Jinja, and 
+Jade.
+
+It's either you use markdown all the way, or you don't get nothing. 
+
+Well, Yass is here!
+
+
+### Philosophy
+
+Yass is meant to be simple and straight forward. From configuration, to setting up 
+pages, Yass provides non-developers, designers and developers a tool that will do one 
+thing and one thing only: generate a static site. 
+
+
+### Technology
+
+Yass is built in Python, and features the powerful templating language Jinja2. 
+
+Yass allows you to write your content in either Jade, Mardkdown or plain HTML. 
 
 HTML gives you full independence 
 
@@ -75,25 +96,25 @@ deploy will trigger a new build, then deploy the content S3
 
 Structure:
 
-/_build
-    |
-/assets/
-    |
-/data/
-    |
-/pages/
-    |
-/templates/
-    |
-    /layouts/
+    ____
+        |
+        /build
+            |
+        /static/
+            |
+        /data/
+            |
+        /pages/
+            |
+        /templates/
+            |
+            /layouts/
 
 ---------
 
-/_build:
-    This where the build sites will be created. The content of this dir is ready for upload
+/build: This where the build sites will be created. The content of this dir is ready for upload
 
-/assets:
-    Hold the assets static files. This directory will be copied to the _build as is
+/static: Hold the assets static files. This directory will be copied to the _build as is
 
 /data:
     Contains data context to inject in the templates.
@@ -105,7 +126,7 @@ Structure:
     If the pages contain local context -> {{ page.title }}
 
 
-/templates
+/templates:
     Contains all the templates to be included, including layouts and custom.
     If you want to create a file to include, it must be placed in here and be called in the page
 
@@ -157,25 +178,7 @@ Your front matter data get parsed as a local object, ie: {{ page.title }}
 
 You can also include your own context
 
-
-
 ## Macros
-
-This macro is autoaded (thanks to jinja-macro-tags) and can use HTML like
-tag to load the macros below:
-ie:
-
-{{ img(src='tdyhs.png') }}
-
-can now be written in html like:
-
-<m:img src="tdhd.png" />
-
-or jinja like
-
-<{img src='jfhf.png'}/>
-
-We recommend the HTML like instead.
 
 
 

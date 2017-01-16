@@ -20,6 +20,11 @@ to the root of all your sites, and type the following
     
     cd YOUR-SITE-NAME
 
+or you could just go into the directory you want to turn into a static site, and type the following:
+
+    yass init
+
+It will setup everything in the current directory
 
 ### Developing & Serving
 

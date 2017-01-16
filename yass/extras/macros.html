@@ -1,13 +1,9 @@
 {#
 
-YASS Macro
-
-This macro is autoaded (thanks to jinja-macro-tags) and can use HTML like
-tag to load the macros below. Refer to the docs.
-
-We also recommend the HTML like tag
+                            YASS global macros
 
 #}
+
 {# -------------------------------------------------------------------------- #}
 {# -------------------------------------------------------------------------- #}
 
@@ -54,7 +50,7 @@ We also recommend the HTML like tag
 {# -------------------------------------------------------------------------- #}
 
 {#: Page meta_social_graph :#}
-{% macro meta_social_graph() %}
+{% macro META_SOCIAL_GRAPH() %}
     {% set url =  site.base_url + page.url %}
     {{ meta_opengraph("title", page.title or '') }}
     {{ meta_opengraph("description", page.description or '') }}
@@ -80,61 +76,68 @@ We also recommend the HTML like tag
     {% endif %}
 {% endmacro %}
 
-{#: Meta tags :#}
-{% macro meta_tags() %}
+{# -------------------------------------------------------------------------- #}
+
+{% macro META_TAGS() %}
     {% for k, v in page.meta.items() %}
         {{ meta_tag(k, v) }}
     {% endfor %}
 {% endmacro %}
 
-{#: Page title :#}
-{% macro page_title(title=None, suffix=None, separator='|') %}
+{# -------------------------------------------------------------------------- #}
+
+{% macro META_PAGE_TITLE(title=None, suffix=None, separator='|') %}
     <title>{{ title or page.title or '' }} {{ separator }} {{ suffix or site.name }}</title>
     {{ meta_tag('title', title or page.title or '') }}
     <link rel="canonical" href="{{ site.base_url }}"/>
 {% endmacro %}
 
-{#: Page description :#}
-{% macro page_description(description=None) %}
+{# -------------------------------------------------------------------------- #}
+
+{% macro META_PAGE_DESCRIPTION(description=None) %}
     {{ meta_tag('description', description or page.description or site.description or '') }}
 {% endmacro %}
 
 
 {# -------------------------------------------------------------------------- #}
-{# ASSETS #}
 
 {#: CSS :#}
-{% macro css(src) %}
+{% macro CSS(src) %}
     {% assets src %}
     <link rel="stylesheet" href="{{ ASSET_URL }}" type="text/css" >
     {% endassets %}
 {% endmacro %}
 
+{# -------------------------------------------------------------------------- #}
+
 {#: JS :#}
-{% macro js(src) %}
+{% macro JS(src) %}
     {% assets src %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
 {% endmacro %}
 
-{#: IMG :#}
-{% macro img(src, class="", id="") %}
+{# -------------------------------------------------------------------------- #}
+
+{#: IMAGE :#}
+{% macro IMAGE(src, class="", id="") %}
     {% assets src %}
     <img src="{{ ASSET_URL }}" class="{{ class }}" id="{{ id }}"/>
     {% endassets %}
 {% endmacro %}
 
+{# -------------------------------------------------------------------------- #}
 
-{#: Favicon :#}
-{% macro favicon(path) %}
+{#: FAVICON :#}
+{% macro FAVICON(path) %}
     {% assets src %}
     <link rel="shortcut icon" href="{{ ASSET_URL }}">
     {% endassets %}
 {% endmacro %}
 
+{# -------------------------------------------------------------------------- #}
 
-{#: Favicon :#}
-{% macro google_analytics(code=None) %}
+{% macro GOOGLE_ANALYTICS(code=None) %}
     {% if not code %}
         {% set code = site.google_analytics %}
     {% endif %}
@@ -150,28 +153,74 @@ We also recommend the HTML like tag
     {% endif %}
 {% endmacro %}
 
+{# -------------------------------------------------------------------------- #}
 
 {# PAGE_TOC: Table of Contents. It will include the TOC on the page #}
-{% macro page_toc() %}
+{% macro PAGE_TOC() %}
     {{ page.__toc__ }}
 {% endmacro %}
 
+{# -------------------------------------------------------------------------- #}
 
-{% macro timeago(dt, format="MM/DD/YYYY h:mm a") %}
-    <time class="timeago" datetime="{{ dt }}">{{ dt | format_datetime(format) }}</time>
+{% macro TIMEAGO(dt, format="MM/DD/YYYY h:mm a") %}
+    <time datetime="{{ dt }}" class="timeago yass-time-ago" >{{ dt | format_datetime(format) }}</time>
 {% endmacro %}
 
+{# -------------------------------------------------------------------------- #}
 
-{% macro datetime(dt, format="MM/DD/YYYY h:mm a") %}
-    <span data-datetime="{{ dt }}" data-format="{{ format }}">{{ dt | format_datetime(format) }}</span>
+{% macro DATETIME(dt, format="MM/DD/YYYY h:mm a") %}
+    <time datetime="{{ dt }}" data-format="{{ format }}">{{ dt | format_datetime(format) }}</time>
 {% endmacro %}
 
+{# -------------------------------------------------------------------------- #}
 
-{% macro markdown() %}
-    {{ caller() | markdown_to_html }}
+{% macro YEAR() %}
+    <time datetime="{{ __YASS__.YEAR }}" class="yass-current-year">{{ __YASS__.YEAR }}</time>
 {% endmacro %}
 
-{% macro jade() %}
-    {{ caller() | jade_to_html }}
+{# -------------------------------------------------------------------------- #}
+
+{% macro CURRENT_YEAR() %}
+    <time datetime="{{ __YASS__.YEAR }}" >{{ __YASS__.YEAR }}</time>
 {% endmacro %}
 
+{# -------------------------------------------------------------------------- #}
+
+{% macro LINK_TO(page, text=None, title=None, class="", id="") %}
+    {{ page | yass_link_to(text=text, title=title, _class=class, id=id) | safe }}
+{% endmacro %}
+
+{# -------------------------------------------------------------------------- #}
+
+{% macro URL_TO(page) %}
+    {{ page | yass_url_to }}
+{% endmacro %}
+
+{# -------------------------------------------------------------------------- #}
+
+{% macro STATIC_LINK(src, text, title=None, class="", id="") %}
+    {% assets src %}
+    <a href="{{ ASSET_URL }}" class="{{ class }}" title="{{ title }}" id="{{ id }}">{{ text | safe}}</a>
+    {% endassets %}
+{% endmacro %}
+
+{# -------------------------------------------------------------------------- #}
+
+{% macro STATIC_URL(src) %}
+    {%- assets src %}
+        {{ ASSET_URL }}
+    {% endassets -%}
+{% endmacro %}
+
+{# -------------------------------------------------------------------------- #}
+
+
+{% macro INCLUDE(file) %}
+    {% include file %}
+{% endmacro %}
+
+{# -------------------------------------------------------------------------- #}
+
+{% macro EMBED(url, witdh="100%", height="480", class="", id="") %}
+    <a href={{ url }} class="oembed {{ class }}" id="{{ id }}" data-max-width="{{ width}}" data-max-height="{{ height }}"></a>
+{% endmacro %}

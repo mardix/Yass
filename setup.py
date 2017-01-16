@@ -25,7 +25,6 @@ install_requires = [
     "markdown==2.6.2",
     "pyjade==4.0.0",
     "python-frontmatter==0.3.1",
-    "jinja-macro-tags==0.1",
     "livereload==2.5.0",
     "arrow==0.8.0",
     "python-slugify==1.2.1",
@@ -40,7 +39,7 @@ setup(
     author_email=__about__["__email__"],
     description=__about__["__summary__"],
     url=__about__["__uri__"],
-    long_description="Static site generator",
+    long_description=__about__["__long_description__"],
     py_modules=['yass'],
     entry_points=dict(console_scripts=[
         'yass=yass.cli:cmd'

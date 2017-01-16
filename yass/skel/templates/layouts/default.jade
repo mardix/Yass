@@ -1,0 +1,32 @@
+!!! 5
+html(lang="en")
+  head
+    meta(charset="utf-8")
+    meta(http-equiv="X-UA-Compatible" content="IE=edge,chrome=1")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+
+    <YASS:META_TAGS />
+    <YASS:META_SOCIAL_GRAPH />
+    <YASS:META_PAGE_TITLE />
+    <YASS:META_PAGE_DESCRIPTION/>
+
+    <YASS:CSS src='vendor/font-awesome/css/font-awesome.min.css' />
+    <YASS:CSS src='vendor/bootstrap/css/bootstrap.min.css' />
+    <YASS:CSS src='vendor/jquery-oembed/jquery.oembed.css' />
+    <YASS:CSS src='vendor/yass/commons.css' />
+    <YASS:CSS src='css/style.css' />
+    <YASS:JS src='vendor/jquery/jquery.min.js' />
+
+    <YASS:GOOGLE_ANALYTICS/>
+
+  body
+    .container.
+        {% block body %}{% endblock %}
+
+
+    <YASS:JS src='vendor/yass/commons.js' />
+    <YASS:JS src='vendor/bootstrap/js/bootstrap.min.js' />
+    <YASS:JS src='vendor/jquery-timeago/jquery.timeago.js' />
+    <YASS:JS src='vendor/jquery-oembed/jquery.oembed.js' />
+    <YASS:JS src='js/app.js' />
+

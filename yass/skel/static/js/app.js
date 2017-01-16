@@ -1,5 +1,8 @@
-// app.js
+/**
+ *  APP.JS
+ *  Your custom javascript
+ */
+
 $(function(){
-        // init time ago
-    $("time.timeago").timeago();
+    
 })
