@@ -1,0 +1,88 @@
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+#                              YASS
+#                      Yet Another Static Site
+# mardix.github.io/yass
+#
+# yass v=1.0.0
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Config
+
+# ** REQUIRED ** - Site name. Site name without http:// or www. ie: mysite.com
+sitename:
+
+# Default layout
+default_layout: "layouts/default.jade"
+
+# Static url path
+static_url: /static
+
+# Bool: Create sitemap.xml
+make_sitemap: True
+
+# Bool: Create feed.xml
+make_rss: True
+
+# Bool: Create robots.txt
+make_robots: True
+
+# Debug
+debug: True
+
+
+# ------------------------------------------------------------------------------
+# Site: Global site context
+# Variables under [site] will be available in the page as ie: {{ site.name }}
+site:
+
+  # Site name
+  name:
+
+  # **REQUIRED - Site base url, the canonical url to build
+  base_url: /
+
+  # The site url
+  url:
+
+  # Google Analytics code
+  google_analytics:
+
+  # Site Favicon
+  favicon:
+
+  # Global meta tags. They can be overwritten by page meta tags
+  meta:
+    keywords:
+    language: en-us
+    rating: General
+    robots: index, follow
+
+  # Social
+  social:
+    facebook:
+    twitter:
+    github:
+
+# ------------------------------------------------------------------------------
+# Hosting. List the endpoints to use. By default it will use 's3'
+# ie: `yass publish` will deploy to S3.
+# If other endpoint is available, `yass publish github`
+hosting:
+  # AWS S3. It will use the `site_name` as the bucket name
+  s3:
+    aws_region: us-east-1
+    aws_access_key_id:
+    aws_secret_access_key:
+
+
+
+# ------------------------------------------------------------------------------
+# For local server development
+local_server:
+  port: 8000
+  livereload: True
+  openwindow: True
+
