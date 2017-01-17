@@ -70,10 +70,12 @@ class Yass(object):
         "title": "",            # The title of the page
         "markup": None,         # The markup to use. ie: md | jade | html (default)
         "slug": None,           # The pretty url new name of the file. A file with the same name will be created
-        "url": "",            # This will be added when processed
+        "url": "",              # This will be added when processed
         "description": "",      # Page description
         "pretty_url": True,     # By default, all url will be pretty (search engine friendly) Set to False to keep the .html
-        "meta": {}
+        "meta": {},
+        "layout": None,         # The layout for the page
+        "template": None        # The page template.
     }
     tpl_env = None
     _templates = {}
@@ -300,6 +302,7 @@ class Yass(object):
                              context={"page": meta},
                              content=content,
                              markup=meta.get("markup"),
+                             template=meta.get("template"),
                              layout=meta.get("layout") or self.default_layout
                              )
 
