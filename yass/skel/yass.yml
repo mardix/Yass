@@ -68,7 +68,7 @@ site:
 
 # ------------------------------------------------------------------------------
 # Hosting. List the endpoints to use. By default it will use 's3'
-# ie: `yass publish` will deploy to S3.
+# ie: `yass publish` will deploy to S3 by default.
 # If other endpoint is available, `yass publish github`
 hosting:
   # AWS S3. It will use the `site_name` as the bucket name
@@ -76,6 +76,10 @@ hosting:
     aws_region: us-east-1
     aws_access_key_id:
     aws_secret_access_key:
+    purge_files: True         # To delete all the files on S3
+    purge_exclude_files:      # Files not to delete on purge
+      - index.html
+      - error.html
 
 
 

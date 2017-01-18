@@ -6,6 +6,8 @@ import os
 import mimetypes
 import threading
 import uuid
+import tempfile
+
 
 MIMETYPE_MAP = {
     '.js':   'application/javascript',
@@ -22,6 +24,15 @@ MIMETYPE_MAP = {
 }
 MIMETYPE_DEFAULT = 'application/octet-stream'
 
+def chunk_list(items, size):
+    """
+    Return a list of chunks
+    :param items: List
+    :param size: int The number of items per chunk
+    :return: List
+    """
+    size = max(1, size)
+    return [items[i:i + size] for i in range(0, len(items), size)]
 
 def get_mimetype(filename):
     mimetype, _ = mimetypes.guess_type(filename)
@@ -53,6 +64,8 @@ class S3Website(object):
         'sa-east-1': 'Z7KQH4QJS55SO',
         'us-gov-west-1': 'Z31GFT0UA1I2HV',
     }
+
+    manifest_file = ".yass-manifest"
 
     def __init__(self,
                  sitename,
@@ -144,8 +157,6 @@ class S3Website(object):
                     return hz["Id"]
         return None
 
-
-
     def head_bucket(self, name):
         """
         Check if a bucket exists
@@ -220,7 +231,14 @@ class S3Website(object):
         return False
 
     def upload(self, build_dir):
+        """
 
+        :param build_dir: The directory to upload
+        :param save_manifest: bool: To save manifest file
+        :param purge: bool : To delete previously uploaded files
+        :return:
+        """
+        files_list = []
         for root, dirs, files in os.walk(build_dir):
             for filename in files:
                 local_path = os.path.join(root, filename)
@@ -233,8 +251,71 @@ class S3Website(object):
                               s3_path=s3_path,
                               mimetype=mimetype)
 
+                files_list.append(s3_path)
                 threading.Thread(target=self._upload_file, kwargs=kwargs)\
                     .start()
+
+        # Save the files that have been uploaded
+        self._set_manifest_data(files_list)
+
+    def purge_files(self, exclude_files=["index.html", "error.html"]):
+        """
+        To delete files that are in the manifest
+        :param excludes_files: list : files to not delete
+        :return:
+        """
+        for chunk in chunk_list(self._get_manifest_data(), 1000):
+            try:
+                self.s3.delete_objects(
+                    Bucket=self.sitename,
+                    Delete={
+                        'Objects': [{"Key": f} for f in chunk
+                                    if f not in exclude_files]
+                    }
+                )
+            except Exception as ex:
+                pass
+
+    def create_manifest_from_s3_files(self):
+        """
+        To create a manifest db for the current
+        :return:
+        """
+        for k in self.s3.list_objects(Bucket=self.sitename)['Contents']:
+            key = k["Key"]
+            files = []
+            if key not in [self.manifest_file]:
+                files.append(key)
+            self._set_manifest_data(files)
+
+    def _set_manifest_data(self, files_list):
+        """
+        Write manifest files
+        :param files_list: list
+        :return:
+        """
+        if files_list:
+            data = ",".join(files_list)
+            self.s3.put_object(Bucket=self.sitename,
+                               Key=self.manifest_file,
+                               Body=data,
+                               ACL='private')
+
+    def _get_manifest_data(self):
+        """
+        Return the list of items in the manifest
+        :return: list
+        """
+        with tempfile.NamedTemporaryFile(delete=True) as tmp:
+            try:
+                self.s3.download_fileobj(self.sitename, self.manifest_file, tmp)
+                tmp.seek(0)
+                data = tmp.read()
+                if data is not None:
+                    return data.split(",")
+            except Exception as ex:
+                pass
+        return []
 
     @staticmethod
     def _upload_file(aws_params, bucket_name, local_path, s3_path, mimetype):
@@ -243,4 +324,5 @@ class S3Website(object):
                        Bucket=bucket_name,
                        Key=s3_path,
                        ExtraArgs={"ContentType": mimetype})
+
 

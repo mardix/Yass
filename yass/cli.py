@@ -127,7 +127,10 @@ def build():
 
 @cli.command("publish")
 @click.argument("endpoint", default="s3")
-def publish(endpoint):
+@click.option("--purge-files", is_flag=True)
+@click.option("--rebuild-manifest", is_flag=True)
+@click.option("--skip-upload", is_flag=True)
+def publish(endpoint, purge_files, rebuild_manifest, skip_upload):
     """Publish the site"""
     print("Publishing site to %s ..." % endpoint.upper())
 
@@ -149,19 +152,37 @@ def publish(endpoint):
                                 region=endpoint.get("aws_region"))
 
         if not p.website_exists:
+            print(">>>")
             print("Setting S3 site...")
             if p.create_website() is True:
                 p.create_www_website()
                 print("New bucket created: %s" % p.sitename)
 
-        print("Uploading pages and static files...")
-        p.upload(yass.build_dir)
+        if rebuild_manifest:
+            print(">>>")
+            print("Rebuilding site's manifest...")
+            p.create_manifest_from_s3_files()
+
+        if purge_files is True or endpoint.get("purge_files") is True:
+            print(">>>")
+            print("Purging files...")
+            exclude_files = endpoint.get("purge_exclude_files", [])
+            p.purge_files(exclude_files=exclude_files)
+
+        if not skip_upload:
+            print(">>>")
+            print("Uploading your site...")
+            p.upload(yass.build_dir)
+        else:
+            print(">>>")
+            print("WARNING: files upload was skipped because of the use of --skip-upload")
 
         print("")
         print("Yass! Your site has been successfully published to: ")
         print(p.website_endpoint_url)
 
     footer()
+
 
 
 @cli.command("setup-dns")
@@ -333,15 +354,15 @@ def cmd():
         yass_init = os.path.isfile(yass_conf)
         sys_argv = sys.argv
         exempt_argv = ["init", "create-site", "version"]
-
         if len(sys_argv) > 1:
-
             if not yass_init and sys_argv[1] not in exempt_argv:
                 error("Yass is not initialized yet in this directory: %s" % CWD)
                 print("Run 'yass init' to initialize Yass in the current directory")
                 footer()
             else:
                 cli()
+        else:
+            cli()
     except Exception as e:
         print("Ohhh noooooo! Something bad happens")
         print(">> %s " % e)
