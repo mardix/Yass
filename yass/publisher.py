@@ -90,7 +90,7 @@ class S3Website(object):
         }
         self.region = region
         self.s3 = boto3.client('s3', **self.aws_params)
-        self.sitename = sitename.lstrip("www.")
+        self.sitename = sitename
         self.www_sitename = "www." + self.sitename
         self.website_endpoint = "%s.s3-website-%s.amazonaws.com" % (self.sitename, region)
         self.website_endpoint_url = "http://" + self.website_endpoint

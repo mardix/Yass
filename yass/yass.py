@@ -56,6 +56,9 @@ def load_conf(yml_file):
     with open(yml_file) as f:
         return dictdot(yaml.load(f))
 
+def extract_sitename(s):
+    return re.sub(r"https?://(www\.)?", '', s).replace("www.", "")
+
 # ==============================================================================
 # -------------------------------- YASS ----------------------------------------
 # ==============================================================================
@@ -100,13 +103,7 @@ class Yass(object):
         site_config.setdefault("base_url", "/")
         self.base_url = site_config.get("base_url")
 
-        self.sitename = self.config.get("sitename")
-
-        if self.sitename:
-            self.sitename = self.sitename\
-                .lstrip("http://")\
-                .lstrip("https://")\
-                .lstrip("www.")
+        self.sitename = extract_sitename(self.config.get("sitename"))
 
         self._init_jinja({
             "site": site_config,
