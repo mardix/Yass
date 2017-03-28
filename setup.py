@@ -8,7 +8,6 @@ Yet Another Static Site!
 import os
 from setuptools import setup, find_packages
 
-__version__ = "0.0.5"
 
 base_dir = os.path.dirname(__file__)
 
@@ -29,6 +28,9 @@ install_requires = [
     "arrow==0.8.0",
     "python-slugify==1.2.1",
     "boto3==1.4.3",
+    "paginator",
+    "requests",
+    #"grequests"
 ]
 
 setup(

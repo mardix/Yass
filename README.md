@@ -82,15 +82,13 @@ Technology uses:
     yass build 
     
     
-### To deploy to S3
+### To publish to S3
 
     yass deploy 
  
 deploy will trigger a new build, then deploy the content S3
     
-    
-
-
+   
 
 ---
 
@@ -114,12 +112,11 @@ Structure:
 
 /build: This where the build sites will be created. The content of this dir is ready for upload
 
-/static: Hold the assets static files. This directory will be copied to the _build as is
+/static: Hold the assets static files. This directory will be copied to the `build` as is
 
 /data:
-    Contains data context to inject in the templates.
-    The content can be in YAML or JSON
-    To access the data, use the file name as as the namespace -> data.yml -> {{ data.$var }}
+    Contains JSON data context to inject in the templates.
+    To access the data, use the file name as as the namespace -> data.json -> {{ data.$var }}
 
 /pages:
     Contains all the pages to be built
@@ -143,12 +140,14 @@ Structure:
 
 ### Supported format:
 
-Sax support `.html` and `.md` files. It will ignore all other extensions in the `/pages` directory
+Yass support `.jade`, `.html` and `.md` files. It will ignore all other extensions in the `/pages` directory
+
+Files starting with `_` (underscore) will be ignored
 
 
 ### Organization:
 
-The pages in Sax should be arranged in the same way they are intended for the rendered website.
+The pages in Yass should be arranged in the same way they are intended for the rendered website.
 Without any additional configuration, the following will just work. Hugo supports content nested at any level.
 
     /pages
@@ -178,10 +177,94 @@ Your front matter data get parsed as a local object, ie: {{ page.title }}
 
 You can also include your own context
 
-## Macros
+
+# Advanced
+
+## Data Driven
+
+In addition to data files, you can load a resource from any api endpoint. 
+
+The data returned must be in the json format.
+
+
+
+## Generators
+
+To generate pages dynamically from a data source
+
+##### context
+
+Generators return a `context` key in the page variable. 
+
+For `single` type, the context is the data for that page
+
+For `pagination` type, the context is a list (array) of data chunk
+
+##### paginator
+
+Generators returns `paginator` key in the page variable, if the `type` is 'pagination'
+
+`pagination` contains: `total_pages`, `current_pages`, `page_slug`, `index_slug`
+
+
+### Generator: Single
+
+Generate single pages from a source containing list (array) of data
+
+    ---
+    
+    _generator:
+        type: single
+        data_source: posts
+        slug: /
+    ---
+
+`data_source`:  Dot notation can be use to 
+ access other node of the data: ie: 
+ 
+    // data/posts.json
+    
+    {
+        "all": [
+            {},
+            ...
+        ],
+        "archived": [
+            {},
+            ...
+        ]
+    }
+
+You can access the data as:
+    
+    data_source: posts.archived
+
+
+`slug`: Will dynamically build the slug. Having the `slug` will overwrite the 
+data slug if it has one. 
+
+`slug` format based on the data, so data token must be provided 
+
+ie: `/{post_type}/{id}/{post_slug}`
+
+### Generator: Pagination
+
+Will generated a paginated 
+
+    ---
+    
+    _generator:
+        type: pagination
+        data_source: posts
+        per_page: 20
+        limit: 100
+        slug: /all/page/{page_num}
+        index_slug: /all
+    ---
+
 
 
 
 ## TODO
-Pagination 
+ 
 RSS

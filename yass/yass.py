@@ -5,22 +5,27 @@
 import os
 import re
 import sys
-import yaml
+import copy
 import json
+import time
+import yaml
 import arrow
 import shutil
 import jinja2
 import logging
+import requests
 import frontmatter
 import pkg_resources
 import webassets.loaders
 from slugify import slugify
-from extras import (jade, md, macro_tags)
+from extras import (jade, md)
+from paginator import Paginator
 from distutils.dir_util import copy_tree
 from webassets import Environment as WAEnv
 from webassets.ext.jinja2 import AssetsExtension
-from webassets.script import CommandLineEnvironment as WACommandLineEnvironment
+from webassets.script import CommandLineEnvironment
 from .__about__ import *
+from . import utils, publisher
 
 # ------------------------------------------------------------------------------
 
@@ -29,35 +34,6 @@ NAME = "Yass"
 PAGE_FORMAT = (".html", ".md", ".jade")
 
 DEFAULT_LAYOUT = "layouts/default.jade"
-
-
-class dictdot(dict):
-    """
-    A dict extension that allows dot notation to access the data.
-    ie: dict.get('key.key2.0.keyx'). Still can use dict[key1][k2]
-    To create: dictdot(my)
-    """
-    def get(self, key, default=None):
-        """ access data via dot notation """
-        try:
-            val = self
-            if "." not in key:
-                return self[key]
-            for k in key.split('.'):
-                if k.isdigit():
-                    k = int(k)
-                val = val[k]
-            return val
-        except (TypeError, KeyError, IndexError) as e:
-            return default
-
-
-def load_conf(yml_file):
-    with open(yml_file) as f:
-        return dictdot(yaml.load(f))
-
-def extract_sitename(s):
-    return re.sub(r"https?://(www\.)?", '', s).replace("www.", "")
 
 # ==============================================================================
 # -------------------------------- YASS ----------------------------------------
@@ -73,7 +49,7 @@ class Yass(object):
         "title": "",            # The title of the page
         "markup": None,         # The markup to use. ie: md | jade | html (default)
         "slug": None,           # The pretty url new name of the file. A file with the same name will be created
-        "url": "",              # This will be added when processed
+        "url": "",              # This will be added when processed. Should never be modified
         "description": "",      # Page description
         "pretty_url": True,     # By default, all url will be pretty (search engine friendly) Set to False to keep the .html
         "meta": {},
@@ -84,7 +60,12 @@ class Yass(object):
     _templates = {}
     _pages_meta = {}
 
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, config=None):
+        """
+
+        :param root_dir: The application root dir
+        :param config: (dict), Dict configuration, will override previously set data
+        """
 
         self.root_dir = root_dir
         self.build_dir = os.path.join(self.root_dir, "build")
@@ -96,18 +77,20 @@ class Yass(object):
         self.build_static_dir = os.path.join(self.build_dir, "static")
 
         config_file = os.path.join(self.root_dir, "yass.yml")
-        self.config = load_conf(config_file)
+        self.config = utils.load_conf(config_file, config)
+
         self.default_layout = self.config.get("default_layout", DEFAULT_LAYOUT)
 
-        site_config = self.config.get("site", {})
-        site_config.setdefault("base_url", "/")
-        self.base_url = site_config.get("base_url")
+        self.site_config = utils.dictdot(self.config.get("site", {}))
+        self.site_config.setdefault("base_url", "/")
+        self.base_url = self.site_config.get("base_url")
 
-        self.sitename = extract_sitename(self.config.get("sitename"))
+        self.sitename = utils.extract_sitename(self.config.get("sitename"))
 
+        self._data = self._load_data()
         self._init_jinja({
-            "site": site_config,
-            "data": self._load_data(),
+            "site": self.site_config,
+            "data": self._data,
             "__YASS__": self._yass_vars()
         })
 
@@ -129,8 +112,7 @@ class Yass(object):
         loader = jinja2.ChoiceLoader([
             # global macros
             jinja2.DictLoader({
-                "yass.macros": pkg_resources.resource_string(__name__,
-                                                             "extras/macros.html"),
+                "yass.macros": pkg_resources.resource_string(__name__, "extras/macros.html"),
             }),
             jinja2.FileSystemLoader(self.templates_dir)
         ])
@@ -144,8 +126,6 @@ class Yass(object):
                                               'yass.extras.md.MarkdownTagExtension',
                                               AssetsExtension
                                           ])
-
-        macro_tags.configure_environment(self.tpl_env, ["yass.macros"])
         self.tpl_env.globals.update(global_context)
         self.tpl_env.filters.update({
             "format_datetime": lambda dt, format: arrow.get(dt).format(format),
@@ -170,7 +150,7 @@ class Yass(object):
                 meta.update(_meta)
                 dest_file, url = self._get_dest_file_and_url(page, meta)
                 meta["url"] = url
-                meta["dest_file"] = dest_file
+                meta["filepath"] = dest_file
                 if meta.get("markup") is None:
                     meta["markup"] = markup
                 self._pages_meta[page] = meta
@@ -231,22 +211,41 @@ class Yass(object):
         return dest_file, url
 
     def _load_data(self):
-        """ Load data from the data directory """
+
         data = {}
+
+        # Load data from the data directory
         for root, _, files in os.walk(self.data_dir):
             for fname in files:
-                if fname.endswith((".yml", ".json")):
-                    name = fname.replace(".yml", "").replace(".json", "")
+                if fname.endswith((".json",)):
+                    name = fname.replace(".json", "")
                     fname = os.path.join(root, fname)
                     if os.path.isfile(fname):
                         with open(fname) as f:
-                            _ = {}
-                            if fname.endswith(".yml"):
-                                _ = yaml.load(f)
-                            elif fname.endswith(".json"):
-                                _ = json.load(f)
+                            _ = json.load(f)
+                            if isinstance(_, dict):
+                                _ = utils.dictdot(_)
                             data[name] = _
-        return data
+
+        # data_api_urls
+        # Doing API call to retrieve the data and assign it to its key
+        # Data must be JSON
+        data_api_urls = self.site_config.get("data_api_urls")
+        if data_api_urls:
+            for name, url in data_api_urls.items():
+                try:
+                    r = requests.get(url)
+                    if r.status_code == 200:
+                        _ = r.json()
+                        if isinstance(_, dict):
+                            _ = utils.dictdot(_)
+                        data[name] = _
+                    else:
+                        raise Exception("`%s -> %s` returns status code %s" % (name, url, r.status_code))
+                except Exception as e:
+                    raise Exception("Data API URLS Error: %s" % e)
+
+        return utils.dictdot(data)
 
     def _init_webassets(self):
 
@@ -263,7 +262,7 @@ class Yass(object):
             log = logging.getLogger('webassets')
             log.addHandler(handler())
             log.setLevel(logging.DEBUG)
-            self.webassets_cmd = WACommandLineEnvironment(assets_env, log)
+            self.webassets_cmd = CommandLineEnvironment(assets_env, log)
 
     def clean_build_dir(self):
         if os.path.isdir(self.build_dir):
@@ -294,14 +293,107 @@ class Yass(object):
         if not filename.startswith(("_", ".")) and (filename.endswith(PAGE_FORMAT)):
             meta = self._get_page_meta(filepath)
             content = self._get_page_content(filepath)
-            self.create_page(build_dir=self.build_dir,
-                             filepath=meta["dest_file"],
-                             context={"page": meta},
-                             content=content,
-                             markup=meta.get("markup"),
-                             template=meta.get("template"),
-                             layout=meta.get("layout") or self.default_layout
-                             )
+
+            # The default context for the page
+            _default_page = {
+                "build_dir": self.build_dir,
+                "filepath": meta["filepath"],
+                "context": {"page": meta},
+                "content": content,
+                "markup": meta.get("markup"),
+                "template": meta.get("template"),
+                "layout": meta.get("layout") or self.default_layout
+            }
+
+            # GENERATOR
+            # Allows to generate
+            _generator = meta.get("_generator")
+            if _generator:
+                data = self._data.get(_generator.get("data_source"))
+
+                # We want these back in meta in they exists in the data
+                special_meta = ["title", "slug", "description"]
+
+                # SINGLE
+                if _generator.get("type") == "single":
+                    for d in data:
+                        dmeta = copy.deepcopy(meta)
+                        page = copy.deepcopy(_default_page)
+                        for _ in special_meta:
+                            if _ in d:
+                                dmeta[_] = d.get(_)
+
+                        # If generator has the slug, it will substitute if
+                        # Slug in the generator must have token from the data
+                        # to generate the slug
+                        if "slug" in _generator:
+                            dmeta["slug"] = _generator.get("slug").format(**d)
+
+                        # Slug is required
+                        if "slug" not in dmeta:
+                            print("WARNING: Skipping page because it's missing `slug`")
+                            continue
+                        slug = dmeta.get("slug")
+                        dmeta["url"] = slug
+                        dmeta["context"] = d
+
+                        page.update({
+                            "filepath": slug,
+                            "context": {"page": dmeta}
+                        })
+                        self.create_page(**page)
+
+                if _generator.get("type") == "pagination":
+
+                    per_page = int(_generator.get("per_page", self.site_config.get("pagination.per_page", 10)))
+                    left_edge = int(_generator.get("left_edge", self.site_config.get("pagination.left_edge", 2)))
+                    left_current = int(_generator.get("left_edge", self.site_config.get("pagination.left_current", 3)))
+                    right_current = int(_generator.get("right_current", self.site_config.get("pagination.right_current", 4)))
+                    right_edge = int(_generator.get("right_edge", self.site_config.get("pagination.right_edge", 2)))
+                    padding = _generator.get("padding")
+                    slug = _generator.get("slug")
+                    limit = _generator.get("limit")
+
+                    if "limit" in _generator:
+                        data = data[:int(limit)]
+                    data_chunks = utils.chunk_list(data, per_page)
+                    len_data = len(data)
+
+                    for i, d in enumerate(data_chunks):
+                        dmeta = copy.deepcopy(meta)
+                        page = copy.deepcopy(_default_page)
+
+                        page_num = i + 1
+                        _paginator = Paginator([],
+                                               total=len_data,
+                                               page=page_num,
+                                               per_page=per_page,
+                                               padding=padding,
+                                               left_edge=left_edge,
+                                               right_edge=right_edge,
+                                               left_current=left_current,
+                                               right_current=right_current)
+                        _paginator.slug = slug
+                        _paginator.index_slug = _generator.get("index_slug")
+
+                        _slug = slug.format(**{"page_num": page_num})
+                        dmeta["url"] = _slug
+                        dmeta["context"] = d
+                        dmeta["paginator"] = _paginator
+                        page.update({
+                            "filepath": _slug,
+                            "context": {"page": dmeta}
+                        })
+                        self.create_page(**page)
+
+                        # First page need to generate the index
+                        if i == 0 and _generator.get("index_slug"):
+                            page["filepath"] = _generator.get("index_slug")
+                            self.create_page(**page)
+
+            # NORMAL PAGE
+            else:
+                self.create_page(**_default_page)
 
     def create_page(self, build_dir, filepath, context={}, content=None, template=None, markup=None, layout=None):
         """
@@ -346,7 +438,8 @@ class Yass(object):
         if "page" not in _context:
             _context["page"] = self.default_page_meta.copy()
         if "url" not in _context["page"]:
-            _context["page"]["url"] = "/" + filepath.lstrip("/").replace("index.html", "")
+            _context["page"]["url"] = "/" + filepath.lstrip("/").replace(
+                "index.html", "")
 
         if template:
             if template not in self._templates:
@@ -363,7 +456,8 @@ class Yass(object):
             # These tags will be included if they are missing
             if re.search(self.RE_EXTENDS, content) is None:
                 layout = layout or self.default_layout
-                content = "\n{% extends '{}' %} \n\n".replace("{}", layout) + content
+                content = "\n{% extends '{}' %} \n\n".replace("{}",
+                                                              layout) + content
 
             if re.search(self.RE_BLOCK_BODY, content) is None:
                 _layout_block = re.search(self.RE_EXTENDS, content).group(0)
@@ -383,4 +477,36 @@ class Yass(object):
         self.build_static()
         self.build_pages()
 
+    def publish(self, target="S3", sitename=None, purge_files=True):
+        """
+        To publish programatically
+
+        :param target: Where to pusblish at, S3
+        :param sitename: The site name
+        :param purge_files: if True, it will delete old files
+        :return:
+        """
+        self.build()
+
+        endpoint = self.config.get("hosting.%s" % target)
+        if target.upper() == "S3":
+            p = publisher.S3Website(sitename=sitename or self.config.get("sitename"),
+                                    aws_access_key_id=endpoint.get("aws_access_key_id"),
+                                    aws_secret_access_key=endpoint.get("aws_secret_access_key"),
+                                    region=endpoint.get("aws_region"))
+            if not p.website_exists:
+                if p.create_website() is True:
+                    # Need to give it enough time to create it
+                    # Should be a one time thing
+                    time.sleep(10)
+                    p.create_www_website()
+
+            p.create_manifest_from_s3_files()
+
+            if purge_files:
+                exclude_files = endpoint.get("purge_exclude_files", [])
+                p.purge_files(exclude_files=exclude_files)
+
+            p.upload(self.build_dir)
+            return p.website_endpoint_url
 

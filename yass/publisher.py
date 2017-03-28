@@ -3,47 +3,10 @@ import botocore
 import boto3
 import json
 import os
-import mimetypes
 import threading
 import uuid
 import tempfile
-
-
-MIMETYPE_MAP = {
-    '.js':   'application/javascript',
-    '.mov':  'video/quicktime',
-    '.mp4':  'video/mp4',
-    '.m4v':  'video/x-m4v',
-    '.3gp':  'video/3gpp',
-    '.woff': 'application/font-woff',
-    '.woff2': 'font/woff2',
-    '.eot':  'application/vnd.ms-fontobject',
-    '.ttf':  'application/x-font-truetype',
-    '.otf':  'application/x-font-opentype',
-    '.svg':  'image/svg+xml',
-}
-MIMETYPE_DEFAULT = 'application/octet-stream'
-
-def chunk_list(items, size):
-    """
-    Return a list of chunks
-    :param items: List
-    :param size: int The number of items per chunk
-    :return: List
-    """
-    size = max(1, size)
-    return [items[i:i + size] for i in range(0, len(items), size)]
-
-def get_mimetype(filename):
-    mimetype, _ = mimetypes.guess_type(filename)
-    if mimetype:
-        return mimetype
-
-    base, ext = os.path.splitext(filename)
-    ext = ext.lower()
-    if ext in MIMETYPE_MAP:
-        return MIMETYPE_MAP[ext]
-    return MIMETYPE_DEFAULT
+from . import utils
 
 
 class S3Website(object):
@@ -243,7 +206,7 @@ class S3Website(object):
             for filename in files:
                 local_path = os.path.join(root, filename)
                 s3_path = os.path.relpath(local_path, build_dir)
-                mimetype = get_mimetype(local_path)
+                mimetype = utils.get_mimetype(local_path)
 
                 kwargs = dict(aws_params=self.aws_params,
                               bucket_name=self.sitename,
@@ -264,7 +227,7 @@ class S3Website(object):
         :param excludes_files: list : files to not delete
         :return:
         """
-        for chunk in chunk_list(self._get_manifest_data(), 1000):
+        for chunk in utils.chunk_list(self._get_manifest_data(), 1000):
             try:
                 self.s3.delete_objects(
                     Bucket=self.sitename,

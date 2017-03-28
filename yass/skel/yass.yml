@@ -12,7 +12,7 @@
 # Config
 
 # ** REQUIRED ** - Site name. Site name without http:// or www. ie: mysite.com
-sitename:
+sitename: mysitename.com
 
 # Default layout
 default_layout: "layouts/default.jade"

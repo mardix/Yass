@@ -1,6 +1,7 @@
 
 import os
 import sys
+import time
 import click
 import pkg_resources
 from livereload import Server, shell
@@ -155,6 +156,9 @@ def publish(endpoint, purge_files, rebuild_manifest, skip_upload):
             print(">>>")
             print("Setting S3 site...")
             if p.create_website() is True:
+                # Need to give it enough time to create it
+                # Should be a one time thing
+                time.sleep(10)
                 p.create_www_website()
                 print("New bucket created: %s" % p.sitename)
 
@@ -365,6 +369,6 @@ def cmd():
             cli()
     except Exception as e:
         print("Ohhh noooooo! Something bad happens")
-        print(">> %s " % e)
-        raise e
+        print(">> %s " % e.__repr__())
+
 

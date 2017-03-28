@@ -1,8 +1,3 @@
-{#
-
-                            YASS global macros
-
-#}
 
 {# -------------------------------------------------------------------------- #}
 {# -------------------------------------------------------------------------- #}
@@ -50,7 +45,7 @@
 {# -------------------------------------------------------------------------- #}
 
 {#: Page meta_social_graph :#}
-{% macro META_SOCIAL_GRAPH() %}
+{% macro meta_social_graph() %}
     {% set url =  site.base_url + page.url %}
     {{ meta_opengraph("title", page.title or '') }}
     {{ meta_opengraph("description", page.description or '') }}
@@ -78,7 +73,10 @@
 
 {# -------------------------------------------------------------------------- #}
 
-{% macro META_TAGS() %}
+{#
+Create the meta tags
+#}
+{% macro meta_tags() %}
     {% for k, v in page.meta.items() %}
         {{ meta_tag(k, v) }}
     {% endfor %}
@@ -86,7 +84,10 @@
 
 {# -------------------------------------------------------------------------- #}
 
-{% macro META_PAGE_TITLE(title=None, suffix=None, separator='|') %}
+{#
+Create a page title
+#}
+{% macro meta_page_title(title=None, suffix=None, separator='|') %}
     <title>{{ title or page.title or '' }} {{ separator }} {{ suffix or site.name }}</title>
     {{ meta_tag('title', title or page.title or '') }}
     <link rel="canonical" href="{{ site.base_url }}"/>
@@ -94,15 +95,21 @@
 
 {# -------------------------------------------------------------------------- #}
 
-{% macro META_PAGE_DESCRIPTION(description=None) %}
+
+{#
+Create page description
+#}
+{% macro meta_page_description(description=None) %}
     {{ meta_tag('description', description or page.description or site.description or '') }}
 {% endmacro %}
 
 
 {# -------------------------------------------------------------------------- #}
 
-{#: CSS :#}
-{% macro CSS(src) %}
+{#
+Create a CSS stylesheet
+#}
+{% macro css(src) %}
     {% assets src %}
     <link rel="stylesheet" href="{{ ASSET_URL }}" type="text/css" >
     {% endassets %}
@@ -111,7 +118,7 @@
 {# -------------------------------------------------------------------------- #}
 
 {#: JS :#}
-{% macro JS(src) %}
+{% macro js(src) %}
     {% assets src %}
     <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
@@ -120,7 +127,7 @@
 {# -------------------------------------------------------------------------- #}
 
 {#: IMAGE :#}
-{% macro IMAGE(src, class="", id="") %}
+{% macro image(src, class="", id="") %}
     {% assets src %}
     <img src="{{ ASSET_URL }}" class="{{ class }}" id="{{ id }}"/>
     {% endassets %}
@@ -129,7 +136,7 @@
 {# -------------------------------------------------------------------------- #}
 
 {#: FAVICON :#}
-{% macro FAVICON(path) %}
+{% macro favicon(path) %}
     {% assets src %}
     <link rel="shortcut icon" href="{{ ASSET_URL }}">
     {% endassets %}
@@ -137,7 +144,7 @@
 
 {# -------------------------------------------------------------------------- #}
 
-{% macro GOOGLE_ANALYTICS(code=None) %}
+{% macro google_analytics(code=None) %}
     {% if not code %}
         {% set code = site.google_analytics %}
     {% endif %}
@@ -156,49 +163,56 @@
 {# -------------------------------------------------------------------------- #}
 
 {# PAGE_TOC: Table of Contents. It will include the TOC on the page #}
-{% macro PAGE_TOC() %}
+{% macro page_toc() %}
     {{ page.__toc__ }}
 {% endmacro %}
 
 {# -------------------------------------------------------------------------- #}
 
-{% macro TIMEAGO(dt, format="MM/DD/YYYY h:mm a") %}
+{% macro timeago(dt, format="MM/DD/YYYY h:mm a") %}
     <time datetime="{{ dt }}" class="timeago yass-time-ago" >{{ dt | format_datetime(format) }}</time>
 {% endmacro %}
 
 {# -------------------------------------------------------------------------- #}
 
-{% macro DATETIME(dt, format="MM/DD/YYYY h:mm a") %}
+{% macro datetime(dt, format="MM/DD/YYYY h:mm a") %}
     <time datetime="{{ dt }}" data-format="{{ format }}">{{ dt | format_datetime(format) }}</time>
 {% endmacro %}
 
 {# -------------------------------------------------------------------------- #}
 
-{% macro YEAR() %}
+{% macro year() %}
     <time datetime="{{ __YASS__.YEAR }}" class="yass-current-year">{{ __YASS__.YEAR }}</time>
 {% endmacro %}
 
 {# -------------------------------------------------------------------------- #}
 
-{% macro CURRENT_YEAR() %}
+{% macro current_year() %}
     <time datetime="{{ __YASS__.YEAR }}" >{{ __YASS__.YEAR }}</time>
 {% endmacro %}
 
 {# -------------------------------------------------------------------------- #}
-
-{% macro LINK_TO(page, text=None, title=None, class="", id="") %}
+{#
+    Creates a link to a page
+    page: the name, ie: index.jade
+    text: the text to create the link. If empty, it will use the link original text
+    title: the link title.
+    class: a class
+    id: id
+#}
+{% macro link_to(page, text=None, title=None, class="", id="") %}
     {{ page | yass_link_to(text=text, title=title, _class=class, id=id) | safe }}
 {% endmacro %}
 
 {# -------------------------------------------------------------------------- #}
 
-{% macro URL_TO(page) %}
+{% macro url_to(page) %}
     {{ page | yass_url_to }}
 {% endmacro %}
 
 {# -------------------------------------------------------------------------- #}
 
-{% macro STATIC_LINK(src, text, title=None, class="", id="") %}
+{% macro static_link(src, text, title=None, class="", id="") %}
     {% assets src %}
     <a href="{{ ASSET_URL }}" class="{{ class }}" title="{{ title }}" id="{{ id }}">{{ text | safe}}</a>
     {% endassets %}
@@ -206,7 +220,7 @@
 
 {# -------------------------------------------------------------------------- #}
 
-{% macro STATIC_URL(src) %}
+{% macro static_url(src) %}
     {%- assets src %}
         {{ ASSET_URL }}
     {% endassets -%}
@@ -215,12 +229,104 @@
 {# -------------------------------------------------------------------------- #}
 
 
-{% macro INCLUDE(file) %}
+{% macro include(file) %}
     {% include file %}
 {% endmacro %}
 
 {# -------------------------------------------------------------------------- #}
 
-{% macro EMBED(url, witdh="100%", height="480", class="", id="") %}
+{% macro embed(url, witdh="100%", height="480", class="", id="") %}
     <a href={{ url }} class="oembed {{ class }}" id="{{ id }}" data-max-width="{{ width}}" data-max-height="{{ height }}"></a>
 {% endmacro %}
+
+
+
+{#
+paginator
+     :prev: Text for previous button
+     :next: Text for Next button
+     :class: A class name for pagination if customed. If you are extending the class
+             best to add the original class and your custom class
+             ie: 'pagination my_custom_pagination' or 'pager my_custom_page'
+     :pager: If true it will show a pager instead of numbered pagination
+     :mobile: if True, if will show the pagination into a 'pager'
+
+#}
+{% macro paginator(prev="Prev", next="Next", class=None, pager=False, mobile=True) %}
+    {% if mobile %}
+        <div class="hidden-lg hidden-md hidden-sm">
+            {{ _pagination(prev, next, class, pager=true, **kwargs) }}
+        </div>
+        <div class="hidden-xs">
+            {{ _pagination(prev, next, class, pager=false, **kwargs) }}
+        </div>
+    {% else %}
+        {{ _pagination(prev, next, class, pager, **kwargs) }}
+    {% endif %}
+
+{% endmacro %}
+
+{%- macro _pagination_page_url(page_num) -%}
+{{- page.paginator.slug | replace("{page_num}", page_num) | safe -}}
+{%- endmacro -%}
+
+{% macro _pagination(prev="", next="", class=None, pager=False) %}
+
+    {{ kwargs }}
+
+    {%  if not class %}
+        {% set class = "pagination" %}
+        {% if pager %}
+            {% set class = "pager" %}
+        {% endif %}
+    {% endif %}
+
+    {% set _prev_btn = "<span aria-hidden='true'>&larr;</span> %s" % prev %}
+    {% set _next_btn = "%s <span aria-hidden='true'>&rarr;</span>" % next %}
+
+    <nav>
+      <ul class="{{ class }}">
+
+          {%- if page.paginator.has_prev %}
+            <li class="previous">
+                <a href="{{ _pagination_page_url(page.paginator.prev_page_number) }}" >
+                    {{ _prev_btn | safe }}
+                </a>
+            </li>
+          {% else %}
+            <li class="disabled previous">
+                <a href="#">{{ _prev_btn | safe }}</a>
+            </li>
+          {%- endif %}
+
+            {% if not pager %}
+                  {%- for page_num in page.paginator.iter_pages() %}
+                    {% if page_num %}
+                      {% if page_num != page.paginator.page %}
+                        <li><a href="{{ _pagination_page_url(page_num) }}"
+                         rel="me">{{ page_num }}</a></li>
+                      {% else %}
+                        <li class="active"><span>{{ page_num }}</span></li>
+                      {% endif %}
+                    {% else %}
+                      <li><span class="ellipsis">...</span></li>
+                    {% endif %}
+                  {%- endfor %}
+            {% endif %}
+
+          {%- if page.paginator.has_next %}
+            <li class="next">
+                <a href="{{ _pagination_page_url(page.paginator.next_page_number) }}">
+                    {{ _next_btn | safe }}
+                </a>
+            </li>
+          {% else %}
+            <li class="disabled next">
+                <a href="#">{{ _next_btn | safe }}</a>
+            </li>
+          {%- endif %}
+      </ul>
+    </nav>
+
+{% endmacro %}
+
