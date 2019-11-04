@@ -20,7 +20,7 @@ install_requires = [
     "jinja2==2.8",
     "webassets==0.12.0",
     "click==6.2",
-    "pyyaml==3.11",
+    "pyyaml==5.1",
     "markdown==2.6.2",
     "pyjade==4.0.0",
     "python-frontmatter==0.3.1",
