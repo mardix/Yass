@@ -17,7 +17,7 @@ with open(os.path.join(base_dir, "yass", "__about__.py")) as f:
     exec(f.read(), __about__)
 
 install_requires = [
-    "jinja2==2.8",
+    "jinja2==2.11.3",
     "webassets==0.12.0",
     "click==6.2",
     "pyyaml==3.11",
